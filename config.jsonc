@@ -1,0 +1,178 @@
+{
+	// keyWeight sets missing keys weight to this weight, additionally bumping up weight of keys that already in loot table but below this value ti this value.
+	// default key weights in jackets are like 5-50
+	// set keyWeight to 0 to disable adding keys to loot
+	"keyWeight": 400,
+	
+	// set keycardWeight to 0 disable adding keycards to loot
+	"keycardWeight": 5,
+
+	/* Change number of items that can spawn in jackets. Default is
+		{
+			"count": 1,
+			"relativeProbability": 802124
+		},
+		{
+			"count": 0,
+			"relativeProbability": 198
+		}
+	*/
+	"overRideLootDistributionJackets": [
+		{
+			"count": 8,
+			"relativeProbability": 10
+		},
+		{
+			"count": 7,
+			"relativeProbability": 50
+		},
+		{
+			"count": 6,
+			"relativeProbability": 100
+		},
+		{
+			"count": 5,
+			"relativeProbability": 200
+		},
+		{
+			"count": 4,
+			"relativeProbability": 400
+		},
+		{
+			"count": 3,
+			"relativeProbability": 800
+		},
+		{
+			"count": 2,
+			"relativeProbability": 800
+		},
+		{
+			"count": 1,
+			"relativeProbability": 400
+		},
+		{
+			"count": 0,
+			"relativeProbability": 200
+		}
+	],
+
+	/* Change number of items that can spawn in duffle bags. Default is
+		{
+			"count": 2,
+			"relativeProbability": 388472
+		},
+		{
+			"count": 3,
+			"relativeProbability": 382443
+		},
+		{
+			"count": 1,
+			"relativeProbability": 384059
+		},
+		{
+			"count": 4,
+			"relativeProbability": 1127
+		}
+	*/
+
+	"overRideLootDistributionDuffleBags": [
+		{
+			"count": 8,
+			"relativeProbability": 10
+		},
+		{
+			"count": 7,
+			"relativeProbability": 50
+		},
+		{
+			"count": 6,
+			"relativeProbability": 100
+		},
+		{
+			"count": 5,
+			"relativeProbability": 200
+		},
+		{
+			"count": 4,
+			"relativeProbability": 400
+		},
+		{
+			"count": 3,
+			"relativeProbability": 800
+		},
+		{
+			"count": 2,
+			"relativeProbability": 800
+		},
+		{
+			"count": 1,
+			"relativeProbability": 400
+		}
+	],
+
+	/* Change number of items that can spawn in dead scavs. Default is
+		{
+			"count": 1,
+			"relativeProbability": 80843
+		},
+		{
+			"count": 4,
+			"relativeProbability": 82951
+		},
+		{
+			"count": 3,
+			"relativeProbability": 83994
+		},
+		{
+			"count": 2,
+			"relativeProbability": 81557
+		},
+		{
+			"count": 5,
+			"relativeProbability": 60043
+		},
+		{
+			"count": 6,
+			"relativeProbability": 589
+		}
+	*/
+
+	"overRideLootDistributionDeadScavs": [
+		{
+			"count": 8,
+			"relativeProbability": 100
+		},
+		{
+			"count": 7,
+			"relativeProbability": 200
+		},
+		{
+			"count": 6,
+			"relativeProbability": 400
+		},
+		{
+			"count": 5,
+			"relativeProbability": 800
+		},
+		{
+			"count": 4,
+			"relativeProbability": 800
+		},
+		{
+			"count": 3,
+			"relativeProbability": 800
+		},
+		{
+			"count": 2,
+			"relativeProbability": 800
+		},
+		{
+			"count": 1,
+			"relativeProbability": 400
+		}
+	],
+
+	// Override jacket container size. Default 2x2
+	"cellsH": 3,
+	"cellsV": 3
+}
