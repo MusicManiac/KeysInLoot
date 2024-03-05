@@ -2,7 +2,7 @@
 	// keyWeight sets missing keys weight to this weight, additionally bumping up weight of keys that already in loot table but below this value ti this value.
 	// default key weights in jackets are like 5-50
 	// set keyWeight to 0 to disable adding keys to loot
-	"keyWeight": 400,
+	"keyWeight": 200,
 	
 	// set keycardWeight to 0 disable adding keycards to loot
 	"keycardWeight": 5,
@@ -17,6 +17,11 @@
 			"relativeProbability": 198
 		}
 	*/
+
+	// since now finding 3 mil keys is actually a lot easier, this will reduce key sell prices a bit. set both to 1 to not change anything.
+	"keyFleaPricesMultiplier" : 0.75,
+	"keyTraderPricesMultiplier": 0.75,
+
 	"overRideLootDistributionJackets": [
 		{
 			"count": 8,
@@ -28,27 +33,27 @@
 		},
 		{
 			"count": 6,
-			"relativeProbability": 100
-		},
-		{
-			"count": 5,
 			"relativeProbability": 200
 		},
 		{
-			"count": 4,
+			"count": 5,
 			"relativeProbability": 400
+		},
+		{
+			"count": 4,
+			"relativeProbability": 800
 		},
 		{
 			"count": 3,
-			"relativeProbability": 800
+			"relativeProbability": 1600
 		},
 		{
 			"count": 2,
-			"relativeProbability": 800
+			"relativeProbability": 1600
 		},
 		{
 			"count": 1,
-			"relativeProbability": 400
+			"relativeProbability": 800
 		},
 		{
 			"count": 0,
@@ -86,27 +91,31 @@
 		},
 		{
 			"count": 6,
-			"relativeProbability": 100
-		},
-		{
-			"count": 5,
 			"relativeProbability": 200
 		},
 		{
-			"count": 4,
+			"count": 5,
 			"relativeProbability": 400
+		},
+		{
+			"count": 4,
+			"relativeProbability": 800
 		},
 		{
 			"count": 3,
-			"relativeProbability": 800
+			"relativeProbability": 1600
 		},
 		{
 			"count": 2,
-			"relativeProbability": 800
+			"relativeProbability": 1600
 		},
 		{
 			"count": 1,
-			"relativeProbability": 400
+			"relativeProbability": 800
+		},
+		{
+			"count": 0,
+			"relativeProbability": 200
 		}
 	],
 
@@ -140,19 +149,19 @@
 	"overRideLootDistributionDeadScavs": [
 		{
 			"count": 8,
-			"relativeProbability": 100
+			"relativeProbability": 10
 		},
 		{
 			"count": 7,
-			"relativeProbability": 200
+			"relativeProbability": 50
 		},
 		{
 			"count": 6,
-			"relativeProbability": 400
+			"relativeProbability": 200
 		},
 		{
 			"count": 5,
-			"relativeProbability": 800
+			"relativeProbability": 400
 		},
 		{
 			"count": 4,
@@ -160,15 +169,19 @@
 		},
 		{
 			"count": 3,
-			"relativeProbability": 800
+			"relativeProbability": 1600
 		},
 		{
 			"count": 2,
-			"relativeProbability": 800
+			"relativeProbability": 1600
 		},
 		{
 			"count": 1,
-			"relativeProbability": 400
+			"relativeProbability": 800
+		},
+		{
+			"count": 0,
+			"relativeProbability": 200
 		}
 	],
 

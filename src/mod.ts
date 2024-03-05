@@ -38,6 +38,8 @@ class KeysInLoot implements IPostDBLoadMod
 		const jacket = tables.loot.staticLoot["578f8778245977358849a9b5"];
 		const duffleBag = tables.loot.staticLoot["578f87a3245977356274f2cb"];
 		const deadScav = tables.loot.staticLoot["5909e4b686f7747f5b744fa4"];
+		const handbookPrices = tables.templates.handbook.Items;
+		const fleaPrices = tables.templates.prices;
 		let keys: string[] = [];
 		let keyCards: string[] = [];
 
@@ -47,10 +49,24 @@ class KeysInLoot implements IPostDBLoadMod
 				if (itemHelper.isOfBaseclass(itemId, BaseClasses.KEY_MECHANICAL)) {
 					//logger.info(`[${this.modShortName}] found mechanical key: ${itemId}`);
 					keys.push(itemId);
+					const itemToModify = handbookPrices.find(item => item.Id === itemId);
+					if (itemToModify) {
+						itemToModify.Price = Math.round(itemToModify.Price * config.keyTraderPricesMultiplier);
+					}
+					if (fleaPrices[itemId]) {
+						fleaPrices[itemId] = Math.round(fleaPrices[itemId] * config.keyFleaPricesMultiplier);
+					}				
 				}
 				if (itemHelper.isOfBaseclass(itemId, BaseClasses.KEYCARD)) {
 					//logger.info(`[${this.modShortName}] keycard: ${itemId}`);
 					keyCards.push(itemId);
+					const itemToModify = handbookPrices.find(item => item.Id === itemId);
+					if (itemToModify) {
+						itemToModify.Price = Math.round(itemToModify.Price * config.keyTraderPricesMultiplier);
+					}
+					if (fleaPrices[itemId]) {
+						fleaPrices[itemId] = Math.round(fleaPrices[itemId] * config.keyFleaPricesMultiplier);
+					}
 				} 
 			}
 		}
