@@ -1,27 +1,26 @@
 {
-	// keyWeight sets missing keys weight to this weight, additionally bumping up weight of keys that already in loot table but below this value ti this value.
-	// default key weights in jackets are like 5-50
+	// keyWeight sets missing keys weight to this weight, additionally bumping up weight of keys that already in loot table but below this value to this value.
+	// default key weights in jackets are like 300-1500
 	// set keyWeight to 0 to disable adding keys to loot
-	"keyWeight": 200,
+	"keyWeight": 2000,
 	
 	// set keycardWeight to 0 disable adding keycards to loot
-	"keycardWeight": 5,
-
-	/* Change number of items that can spawn in jackets. Default is
-		{
-			"count": 1,
-			"relativeProbability": 802124
-		},
-		{
-			"count": 0,
-			"relativeProbability": 198
-		}
-	*/
+	"keycardWeight": 100,
 
 	// since now finding 3 mil keys is actually a lot easier, this will reduce key sell prices a bit. set both to 1 to not change anything.
 	"keyFleaPricesMultiplier" : 0.75,
 	"keyTraderPricesMultiplier": 0.75,
 
+	/* Change number of items that can spawn in jackets. Default is
+		{
+			"count": 1,
+			"relativeProbability": 2131139
+		},
+		{
+			"count": 0,
+			"relativeProbability": 715
+		}
+	*/
 	"overRideLootDistributionJackets": [
 		{
 			"count": 8,
@@ -49,11 +48,11 @@
 		},
 		{
 			"count": 2,
-			"relativeProbability": 1600
+			"relativeProbability": 3200
 		},
 		{
 			"count": 1,
-			"relativeProbability": 800
+			"relativeProbability": 1600
 		},
 		{
 			"count": 0,
@@ -63,20 +62,20 @@
 
 	/* Change number of items that can spawn in duffle bags. Default is
 		{
-			"count": 2,
-			"relativeProbability": 388472
+			"count": 3,
+			"relativeProbability": 1658573
 		},
 		{
-			"count": 3,
-			"relativeProbability": 382443
+			"count": 2,
+			"relativeProbability": 1672159
 		},
 		{
 			"count": 1,
-			"relativeProbability": 384059
+			"relativeProbability": 1670525
 		},
 		{
 			"count": 4,
-			"relativeProbability": 1127
+			"relativeProbability": 2764
 		}
 	*/
 
@@ -121,29 +120,29 @@
 
 	/* Change number of items that can spawn in dead scavs. Default is
 		{
-			"count": 1,
-			"relativeProbability": 80843
-		},
-		{
-			"count": 4,
-			"relativeProbability": 82951
-		},
-		{
-			"count": 3,
-			"relativeProbability": 83994
-		},
-		{
 			"count": 2,
-			"relativeProbability": 81557
+			"relativeProbability": 282031
 		},
 		{
 			"count": 5,
-			"relativeProbability": 60043
+			"relativeProbability": 206334
+		},
+		{
+			"count": 4,
+			"relativeProbability": 286601
+		},
+		{
+			"count": 1,
+			"relativeProbability": 280827
+		},
+		{
+			"count": 3,
+			"relativeProbability": 292388
 		},
 		{
 			"count": 6,
-			"relativeProbability": 589
-		}
+			"relativeProbability": 1202
+			}
 	*/
 
 	"overRideLootDistributionDeadScavs": [
