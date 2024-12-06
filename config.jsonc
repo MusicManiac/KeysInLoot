@@ -1,6 +1,6 @@
 {
 	// keyWeight sets missing keys weight to this weight, additionally bumping up weight of keys that already in loot table but below this value to this value.
-	// default key weights in jackets are like 300-1500
+	// default key weights in jackets are like 300-1500 (in SPT 3.8.X, it's last time I checked weights)
 	// set keyWeight to 0 to disable adding keys to loot
 	"keyWeight": 500,
 	
