@@ -41,7 +41,6 @@ class KeysInLoot implements IPostDBLoadMod
 
 		for (let item in itemDB) {
 			const itemId = itemDB[item]._id;
-			//
 			if (itemDB[item]._type == "Item") {
 				if ((itemHelper.isOfBaseclass(itemId, BaseClasses.KEY_MECHANICAL) && config.keyWeight !== 0)
 					|| (itemHelper.isOfBaseclass(itemId, BaseClasses.KEYCARD) && config.keycardWeight !== 0)) {
@@ -63,76 +62,80 @@ class KeysInLoot implements IPostDBLoadMod
 		const maps = ["bigmap", "factory4_day", "factory4_night", "interchange", "laboratory", "lighthouse", "rezervbase", "sandbox", "sandbox_high", "shoreline", "tarkovstreets", "woods"];
 
 		for (const map of maps) {
-			if (config.keyWeight !== 0) {
-				for (const key of keys) {
-					try {
-						if (tables.locations[map] && tables.locations[map].staticLoot && tables.locations[map].staticLoot["578f8778245977358849a9b5"]) {
-							const jacket = tables.locations[map].staticLoot["578f8778245977358849a9b5"];
-							const foundKeyJacket = jacket.itemDistribution.find(item => item.tpl === key);
-							if (foundKeyJacket) {
-								if (foundKeyJacket.relativeProbability < config.keyWeight) {
-									foundKeyJacket.relativeProbability = config.keyWeight;
-									adjustedWeights++;
-								}
-							} else {
-								jacket.itemDistribution.push({
-									tpl: key,
-									relativeProbability: config.keyWeight
-								});
-								addedKeys++;
-							}
-							jacket.itemcountDistribution = config.overRideLootDistributionJackets;
-						}
-					} catch (error) {
-						console.error(`Error processing jacket on map ${map}`, error);
-					}
-					
-					try {
-						if (tables.locations[map] && tables.locations[map].staticLoot && tables.locations[map].staticLoot["578f87a3245977356274f2cb"]) {
-							const duffleBag = tables.locations[map].staticLoot["578f87a3245977356274f2cb"];
-							const foundKeyDuffle = duffleBag.itemDistribution.find(item => item.tpl === key);
-							if (foundKeyDuffle) {
-								if (foundKeyDuffle.relativeProbability < config.keyWeight) {
-									foundKeyDuffle.relativeProbability = config.keyWeight;
-									adjustedWeights++;
-								}
-							} else {
-								duffleBag.itemDistribution.push({
-									tpl: key,
-									relativeProbability: config.keyWeight
-								});
-								addedKeys++;
-							}
-							duffleBag.itemcountDistribution = config.overRideLootDistributionDuffleBags;
-						}
-					} catch (error) {
-						console.error(`Error processing dufflebag on map ${map}`, error);
-					}
-
-					try {
-						if (tables.locations[map] && tables.locations[map].staticLoot && tables.locations[map].staticLoot["5909e4b686f7747f5b744fa4"]) {
-							const deadScav = tables.locations[map].staticLoot["5909e4b686f7747f5b744fa4"];
-							const foundDeadScav = deadScav.itemDistribution.find(item => item.tpl === key);
-							if (foundDeadScav) {
-								if (foundDeadScav.relativeProbability < config.keyWeight) {
-									foundDeadScav.relativeProbability = config.keyWeight;
-									adjustedWeights++;
-								}
-							} else {
-								deadScav.itemDistribution.push({
-									tpl: key,
-									relativeProbability: config.keyWeight
-								});
-								addedKeys++;
-							}
-							deadScav.itemcountDistribution = config.overRideLootDistributionDeadScavs;
-						}
-					} catch (error) {
-						console.error(`Error processing deadScav on map ${map}`, error);
-					}
-
-					
+			for (const key of keys) {
+				let configWeight = 0;
+				if (itemHelper.isOfBaseclass(key, BaseClasses.KEY_MECHANICAL)) {
+					configWeight = config.keyWeight;
+				} else {
+					configWeight = config.keycardWeight;
 				}
+				try {
+					if (tables.locations[map] && tables.locations[map].staticLoot && tables.locations[map].staticLoot["578f8778245977358849a9b5"]) {
+						const jacket = tables.locations[map].staticLoot["578f8778245977358849a9b5"];
+						const foundKeyJacket = jacket.itemDistribution.find(item => item.tpl === key);
+						if (foundKeyJacket) {
+							if (foundKeyJacket.relativeProbability < configWeight) {
+								foundKeyJacket.relativeProbability = configWeight;
+								adjustedWeights++;
+							}
+						} else {
+							jacket.itemDistribution.push({
+								tpl: key,
+								relativeProbability: configWeight
+							});
+							addedKeys++;
+						}
+						jacket.itemcountDistribution = config.overRideLootDistributionJackets;
+					}
+				} catch (error) {
+					console.error(`Error processing jacket on map ${map}`, error);
+				}
+				
+				try {
+					if (tables.locations[map] && tables.locations[map].staticLoot && tables.locations[map].staticLoot["578f87a3245977356274f2cb"]) {
+						const duffleBag = tables.locations[map].staticLoot["578f87a3245977356274f2cb"];
+						const foundKeyDuffle = duffleBag.itemDistribution.find(item => item.tpl === key);
+						if (foundKeyDuffle) {
+							if (foundKeyDuffle.relativeProbability < configWeight) {
+								foundKeyDuffle.relativeProbability = configWeight;
+								adjustedWeights++;
+							}
+						} else {
+							duffleBag.itemDistribution.push({
+								tpl: key,
+								relativeProbability: configWeight
+							});
+							addedKeys++;
+						}
+						duffleBag.itemcountDistribution = config.overRideLootDistributionDuffleBags;
+					}
+				} catch (error) {
+					console.error(`Error processing dufflebag on map ${map}`, error);
+				}
+
+				try {
+					if (tables.locations[map] && tables.locations[map].staticLoot && tables.locations[map].staticLoot["5909e4b686f7747f5b744fa4"]) {
+						const deadScav = tables.locations[map].staticLoot["5909e4b686f7747f5b744fa4"];
+						const foundDeadScav = deadScav.itemDistribution.find(item => item.tpl === key);
+						if (foundDeadScav) {
+							if (foundDeadScav.relativeProbability < configWeight) {
+								foundDeadScav.relativeProbability = configWeight;
+								adjustedWeights++;
+							}
+						} else {
+							deadScav.itemDistribution.push({
+								tpl: key,
+								relativeProbability: configWeight
+							});
+							addedKeys++;
+						}
+						deadScav.itemcountDistribution = config.overRideLootDistributionDeadScavs;
+					}
+				} catch (error) {
+					console.error(`Error processing deadScav on map ${map}`, error);
+				}
+
+				
 			}
 		}	
 
