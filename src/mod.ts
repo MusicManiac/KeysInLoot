@@ -88,7 +88,9 @@ class KeysInLoot implements IPostDBLoadMod
 							});
 							addedKeys++;
 						}
-						jacket.itemcountDistribution = config.overRideLootDistributionJackets;
+						if (config.overrideLootDistribution) {
+							jacket.itemcountDistribution = config.overRideLootDistributionJackets;
+						}
 					}
 				} catch (error) {
 					console.error(`Error processing jacket on map ${map}`, error);
@@ -110,7 +112,9 @@ class KeysInLoot implements IPostDBLoadMod
 							});
 							addedKeys++;
 						}
-						duffleBag.itemcountDistribution = config.overRideLootDistributionDuffleBags;
+						if (config.overrideLootDistribution) {
+							duffleBag.itemcountDistribution = config.overRideLootDistributionDuffleBags;
+						}
 					}
 				} catch (error) {
 					console.error(`Error processing dufflebag on map ${map}`, error);
@@ -132,7 +136,9 @@ class KeysInLoot implements IPostDBLoadMod
 							});
 							addedKeys++;
 						}
-						deadScav.itemcountDistribution = config.overRideLootDistributionDeadScavs;
+						if (config.overrideLootDistribution) {
+							deadScav.itemcountDistribution = config.overRideLootDistributionDeadScavs;
+						}
 					}
 				} catch (error) {
 					console.error(`Error processing deadScav on map ${map}`, error);
