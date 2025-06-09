@@ -6,16 +6,11 @@ import { KeysInLootModificationResult } from "./KeysInLootModificationResult";
 export class KeysInLootMapHandler
 {
 
-    private _location: ILocation;
-    private _weightService: ContainerItemDistributionService;
-
     constructor(
-        location: ILocation,
-        weightService: ContainerItemDistributionService)
-    {
-        this._location = location;
-        this._weightService = weightService;
-    }
+        private location: ILocation,
+        private weightService: ContainerItemDistributionService
+    ) 
+    {}
 
     public tryHandleContainers(
         handler: KeysInLootMapHandler,
@@ -51,20 +46,25 @@ export class KeysInLootMapHandler
     {
         try
         {
-            const container = this.tryFindContainerInLocation(containerId, this._location);
+            const container = this.tryFindContainerInLocation(containerId, this.location);
             if (container)
             {
-                const result = this._weightService.ensureItemsMinimumRelativeProbabilityForContainer(container, items, minimumRelativeProbability);
+                const result = this.weightService.ensureItemsMinimumRelativeProbabilityForContainer(container, items, minimumRelativeProbability);
                 if (overrideItemCountDistribution)
                 {
                     container.itemcountDistribution = itemCountDistribution;
                 }
                 return result;
             }
+            else 
+            {
+                console.warn(`Container ${containerId} not found in location ${this.location.base.Name}`);
+                return new KeysInLootModificationResult(0, 0);
+            }
         }
         catch (error)
         {
-            console.error(`Error processing container ${containerId} on map ${this._location.base._Id}`, error);
+            console.error(`Error processing container ${containerId} on map ${this.location.base.Name}`, error);
             return new KeysInLootModificationResult(0, 0);
         }
     }
@@ -76,6 +76,9 @@ export class KeysInLootMapHandler
             return null;
         }
         const container = location.staticLoot[containerTplId];
-        return container ? container : null;
+        if (!container)
+            return null;
+
+        return container;
     }
 }

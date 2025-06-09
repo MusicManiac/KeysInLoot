@@ -4,27 +4,35 @@ import { IDatabaseTables } from "@spt/models/spt/server/IDatabaseTables";
 
 export class ItemPriceService
 {
-    private _handbook: IHandbookBase;
-    private _fleaPrices: Record<string, number>;
+    private tables: IDatabaseTables;
 
     constructor(tables: IDatabaseTables)
     {
-        this._handbook = tables.templates.handbook;
-        this._fleaPrices = tables.templates.prices;
+        this.tables = tables;
     }
 
-    public adjustFleaMarketPrice(itemTemplate: ITemplateItem, multiplier: number)
+    private get handbook(): IHandbookBase
     {
-        const fleaItem = this._fleaPrices[itemTemplate._id];
+        return this.tables.templates.handbook;
+    }
+
+    private get fleaPrices(): Record<string, number>
+    {
+        return this.tables.templates.prices;
+    }
+
+    public adjustFleaMarketPrice(itemTemplate: ITemplateItem, multiplier: number) : void
+    {
+        const fleaItem = this.fleaPrices[itemTemplate._id];
         if (fleaItem)
         {
-            this._fleaPrices[itemTemplate._id] = Math.round(fleaItem * multiplier);
+            this.fleaPrices[itemTemplate._id] = Math.round(fleaItem * multiplier);
         }
     }
 
-    public adjustTraderPrice(itemTemplate: ITemplateItem, multiplier: number)
+    public adjustTraderPrice(itemTemplate: ITemplateItem, multiplier: number) : void
     {
-        const itemToModify = this._handbook.Items.find(item => item.Id === itemTemplate._id);
+        const itemToModify = this.handbook.Items.find(item => item.Id === itemTemplate._id);
         if (itemToModify)
         {
             itemToModify.Price = Math.round(itemToModify.Price * multiplier);
