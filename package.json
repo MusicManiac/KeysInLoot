@@ -1,6 +1,6 @@
 {
     "name": "MusicManiac-KeysInLoot",
-    "version": "1.6.1",
+    "version": "1.7.0",
     "loadBefore": [],
     "loadAfter": [],
     "incompatibilities": [],
@@ -11,8 +11,9 @@
     "sptVersion": "3.11.x",
     "scripts": {
         "setup": "npm i",
-        "build": "node ./build.mjs",
-        "buildinfo": "node ./build.mjs --verbose"
+        "build": "node ./packageBuild.ts",
+        "examples-build": "node ./build.mjs",
+        "examples-buildinfo": "node ./build.mjs --verbose"
     },
     "devDependencies": {
         "@types/node": "20.11",

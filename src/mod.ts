@@ -3,16 +3,13 @@ import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { IPostDBLoadMod } from "@spt/models/external/IPostDBLoadMod";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
-import { BaseClasses } from  "@spt/models/enums/BaseClasses";
-
 import { FileSystem } from "@spt/utils/FileSystem";
 import { JsonUtil } from "@spt/utils/JsonUtil";
-import path from "path";
 import { ItemPriceService } from "./ItemPriceService";
 import { ContainerItemDistributionService } from "./ContainerItemDistributionService";
 import { KeysInLootModificationResult } from "./KeysInLootModificationResult";
-import { IKeysInLootConfig } from "./IKeysInLootConfig";
-import { KeysInLootMapHandler } from "./KeysInLootMapHandler";
+import { ConfigLoader } from "./ConfigLoader";
+import { KeysInLootLocationFactory } from "./KeysInLootLocationFactory";
 
 class KeysInLoot implements IPostDBLoadMod
 {
@@ -37,12 +34,14 @@ class KeysInLoot implements IPostDBLoadMod
         const db = container.resolve<DatabaseServer>("DatabaseServer");
         const fs = container.resolve<FileSystem>("FileSystem");
         const jsonUtil = container.resolve<JsonUtil>("JsonUtil");
+        const configLoader = new ConfigLoader(fs, jsonUtil);
+        const itemDistributionService = new ContainerItemDistributionService();
+        const keysInLootLocationFactory = new KeysInLootLocationFactory(configLoader, itemDistributionService, itemHelper);
 
         // Load data
-        const config = await this.getConfig(fs, jsonUtil);
+        const config = await configLoader.loadCoreConfig();
         const tables = db.getTables();
-        const items = itemHelper.getItems();
-        const maps = [
+        const sptLocations = [
             tables.locations.bigmap, 
             tables.locations.factory4_day,
             tables.locations.factory4_night,
@@ -57,61 +56,50 @@ class KeysInLoot implements IPostDBLoadMod
             tables.locations.woods
         ];
 
-        const weightService = new ContainerItemDistributionService();
-        const itemPriceService = new ItemPriceService(tables);
-        const result = new KeysInLootModificationResult(0, 0);
-        // Modify Keys
-        const keysMinimumRelativeProbability = config.keyWeight;
-        const enabledForKeys = keysMinimumRelativeProbability !== 0;
-        if (enabledForKeys)
+        const totalResult = KeysInLootModificationResult.empty();
+        for (const sptLocation of sptLocations)
         {
-            const keys = items.filter(item => itemHelper.isOfBaseclass(item._id, BaseClasses.KEY_MECHANICAL));
-            keys.forEach(key => itemPriceService.adjustFleaMarketPrice(key, config.keyFleaPricesMultiplier));
-            keys.forEach(key => itemPriceService.adjustTraderPrice(key, config.keyTraderPricesMultiplier));
-
-            for (const map of maps) 
+            try 
             {
-                const handler = new KeysInLootMapHandler(map, weightService);
-                const mapResult = handler.tryHandleContainers(handler, keys, keysMinimumRelativeProbability, config.overrideLootDistribution, config.overRideLootDistributionJackets);
-                result.add(mapResult);
+                const keysInLootLocation = await keysInLootLocationFactory.createKeysInLootLocation(sptLocation);
+                const locationResult = keysInLootLocation.modifyContainers();
+                totalResult.addResult(locationResult);
+            }
+            catch (err) 
+            {
+                console.error(`[${this.modShortName}] Error while processing location ${sptLocation.base._Id}: ${err}`);
+                continue;
             }
         }
 
-        // Modify Keycards
-        const keyCardsMinimumRelativeProbability = config.keycardWeight;
-        const enabledForKeyCards = config.keycardWeight !== 0;
-        if (enabledForKeyCards)
+        
+        try 
         {
-            const keyCards = items.filter(item => itemHelper.isOfBaseclass(item._id, BaseClasses.KEYCARD));
-            keyCards.forEach(keyCard => itemPriceService.adjustFleaMarketPrice(keyCard, config.keyFleaPricesMultiplier));
-            keyCards.forEach(keyCard => itemPriceService.adjustTraderPrice(keyCard, config.keyTraderPricesMultiplier));
-
-            for (const map of maps) 
-            {
-                const handler = new KeysInLootMapHandler(map, weightService);
-                const mapResult = handler.tryHandleContainers(handler, keyCards, keyCardsMinimumRelativeProbability, config.overrideLootDistribution, config.overRideLootDistributionJackets);
-                result.add(mapResult);
-            }
+            // Get distinct list of item templates from totalResult
+            const allItems = [...totalResult.adjustedWeights, ...totalResult.addedWeights];
+            const distinctItems = allItems.filter((item, index, self) =>
+                index === self.findIndex(t => t._id === item._id)
+            );
+            // Adjust prices for modified or added keys or keycards
+            const itemPriceService = new ItemPriceService(tables);
+            distinctItems.forEach(item => itemPriceService.adjustFleaMarketPrice(item, config.keyFleaPricesMultiplier));
+            distinctItems.forEach(item => itemPriceService.adjustTraderPrice(item, config.keyTraderPricesMultiplier));
+        }
+        catch (err) 
+        {
+            console.error(`[${this.modShortName}] Error while processing prices: ${err}`);
         }
 
-        logger.info(`[${this.modShortName}] ${result.adjustedWeights} keys weights were adjusted`);
-        logger.info(`[${this.modShortName}] different keys were added ${result.addedWeights} times to jacket/duffle/dead scav loot`);
+        logger.info(`[${this.modShortName}] ${totalResult.adjustedWeights.length} keys weights were adjusted`);
+        logger.info(`[${this.modShortName}] different keys were added ${totalResult.addedWeights.length} times to jacket/duffle/dead scav loot`);
 
+        // Adjust jacket cell size
         const itemDB = tables.templates.items;
         itemDB["578f8778245977358849a9b5"]._props.Grids[0]._props.cellsH = config.cellsH;
         itemDB["578f8778245977358849a9b5"]._props.Grids[0]._props.cellsV = config.cellsV;
 
 
         logger.success(`[${this.modShortName}] ${this.mod} finished loading`);
-    }
-
-    private async getConfig(fs:FileSystem, jsonUtil: JsonUtil) : Promise<IKeysInLootConfig>
-    {
-        const configPath = path.resolve(__dirname, "../config.jsonc");
-        const configFileContent = await fs.read(configPath);
-        const configString = configFileContent.toString();
-        const config = jsonUtil.deserializeJsonC<IKeysInLootConfig>(configString);
-        return config;
     }
 }
 

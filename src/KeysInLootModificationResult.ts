@@ -1,15 +1,31 @@
+import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 
 export class KeysInLootModificationResult
 {
     constructor(
-        public adjustedWeights: number,
-        public addedWeights: number
+        public adjustedWeights: ITemplateItem[],
+        public addedWeights: ITemplateItem[]
     ) 
     {}
 
-    public add(other: KeysInLootModificationResult): void
+    public adjusted(item: ITemplateItem) : void
     {
-        this.adjustedWeights += other.adjustedWeights;
-        this.addedWeights += other.addedWeights;
+        this.adjustedWeights.push(item);
+    }
+
+    public added(item: ITemplateItem) : void
+    {
+        this.addedWeights.push(item);
+    }
+
+    public addResult(other: KeysInLootModificationResult): void
+    {
+        this.adjustedWeights.push(...other.adjustedWeights);
+        this.addedWeights.push(...other.addedWeights);
+    }
+
+    public static empty(): KeysInLootModificationResult
+    {
+        return new KeysInLootModificationResult([], []);
     }
 }

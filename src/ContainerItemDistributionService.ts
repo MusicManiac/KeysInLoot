@@ -4,47 +4,45 @@ import { KeysInLootModificationResult } from "./KeysInLootModificationResult";
 
 export class ContainerItemDistributionService
 {
-
-    public ensureItemsMinimumRelativeProbabilityForContainer(
+    public ensureMinimumRelativeProbabilityForItemsInContainer(
         container: IStaticLootDetails,
-        keys: ITemplateItem[],
-        weight: number
+        items: ITemplateItem[],
+        minimumRelativeProbability: number
     ): KeysInLootModificationResult
     {
-        const modification = new KeysInLootModificationResult(0, 0);
-        if (!container)
+        const modification = KeysInLootModificationResult.empty();
+        for (const key of items)
         {
-            return modification;
-        }
-
-        for (const key of keys)
-        {
-            const result = this.ensureItemMinimumRelativeProbabilityForContainer(container, key._id, weight);
-            modification.add(result);
+            const result = this.ensureMinimumRelativeProbabilityForItemInContainer(container, key, minimumRelativeProbability);
+            modification.addResult(result);
         }
 
         return modification;
     }
 
-    private ensureItemMinimumRelativeProbabilityForContainer(container: IStaticLootDetails, keyTplId: string, configWeight: number): KeysInLootModificationResult
+    private ensureMinimumRelativeProbabilityForItemInContainer(
+        container: IStaticLootDetails, 
+        itemTemplate: ITemplateItem, 
+        configWeight: number
+    ): KeysInLootModificationResult
     {
-        const result = new KeysInLootModificationResult(0, 0);
-        const foundKeyJacket = container.itemDistribution.find(item => item.tpl === keyTplId);
-        if (foundKeyJacket)
+        const result = KeysInLootModificationResult.empty();
+        const foundItem = container.itemDistribution.find(item => item.tpl === itemTemplate._id);
+        if (foundItem)
         {
-            if (foundKeyJacket.relativeProbability < configWeight)
+            if (foundItem.relativeProbability < configWeight)
             {
-                foundKeyJacket.relativeProbability = configWeight;
-                result.adjustedWeights++;
+                foundItem.relativeProbability = configWeight;
+                result.adjusted(itemTemplate);
             }
         }
         else
         {
             container.itemDistribution.push({
-                tpl: keyTplId,
+                tpl: itemTemplate._id,
                 relativeProbability: configWeight
             });
-            result.addedWeights++;
+            result.added(itemTemplate);
         }
         return result;
     }
