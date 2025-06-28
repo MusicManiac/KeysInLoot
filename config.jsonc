@@ -154,5 +154,9 @@
 
 	// Override jacket container size. Default 2x2
 	"cellsH": 3,
-	"cellsV": 3
+	"cellsV": 3,
+    // When enabled overrides minimum weights for keys and keycards with a per location config file instead of global
+    // weights "keyWeight" and "keycardWeight" in this config file. Edit the config files in the locations folder to change values
+    // while this is enabled.
+    "enableLocationsConfig" : false
 }

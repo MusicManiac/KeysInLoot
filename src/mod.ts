@@ -1,162 +1,106 @@
 import { DependencyContainer } from "tsyringe";
-import { Ilogger } from "@spt/models/spt/utils/Ilogger";
+import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { IPostDBLoadMod } from "@spt/models/external/IPostDBLoadMod";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
-import { BaseClasses } from  "@spt/models/enums/BaseClasses";
-
 import { FileSystem } from "@spt/utils/FileSystem";
-import { jsonc } from "jsonc";
-import path from "path";
+import { JsonUtil } from "@spt/utils/JsonUtil";
+import { ItemPriceService } from "./ItemPriceService";
+import { ContainerItemDistributionService } from "./ContainerItemDistributionService";
+import { KeysInLootModificationResult } from "./KeysInLootModificationResult";
+import { ConfigLoader } from "./ConfigLoader";
+import { KeysInLootLocationFactory } from "./KeysInLootLocationFactory";
 
 class KeysInLoot implements IPostDBLoadMod
 {
-	private logger: Ilogger;
-	public mod: string;
+    private logger: ILogger;
+    public mod: string;
     public modShortName: string;
 
-	constructor() {
+    constructor() 
+    {
         this.mod = "MusicManiac-KeysInLoot";
         this.modShortName = "KeysInLoot";
     }
 
-	public async postDBLoad(container: DependencyContainer): Promise<void>
-	{
-		this.logger = container.resolve<Ilogger>("WinstonLogger");
-		const logger = this.logger;
-		logger.info(`[${this.modShortName}] ${this.mod} started loading`);
+    public async postDBLoad(container: DependencyContainer): Promise<void>
+    {
+        this.logger = container.resolve<ILogger>("WinstonLogger");
+        const logger = this.logger;
+        logger.info(`[${this.modShortName}] ${this.mod} started loading`);
 
-		const itemHelper = container.resolve<ItemHelper>("ItemHelper");
+        // Resolve dependencies
+        const itemHelper = container.resolve<ItemHelper>("ItemHelper");
+        const db = container.resolve<DatabaseServer>("DatabaseServer");
+        const fs = container.resolve<FileSystem>("FileSystem");
+        const jsonUtil = container.resolve<JsonUtil>("JsonUtil");
+        const configLoader = new ConfigLoader(fs, jsonUtil);
+        const itemDistributionService = new ContainerItemDistributionService();
+        const keysInLootLocationFactory = new KeysInLootLocationFactory(configLoader, itemDistributionService, itemHelper);
 
-		const db = container.resolve<DatabaseServer>("DatabaseServer");
-		
-		const fs = container.resolve<FileSystem>("FileSystem");
-		const configPath = path.resolve(__dirname, "../config.jsonc");
-		const configFileContent = await fs.read(configPath);
-		const configString = configFileContent.toString();
-		const config = jsonc.parse(configString);
+        // Load data
+        const config = await configLoader.loadCoreConfig();
+        const tables = db.getTables();
+        const sptLocations = [
+            tables.locations.bigmap, 
+            tables.locations.factory4_day,
+            tables.locations.factory4_night,
+            tables.locations.interchange,
+            tables.locations.laboratory, 
+            tables.locations.lighthouse,
+            tables.locations.rezervbase,
+            tables.locations.sandbox,
+            tables.locations.sandbox_high,
+            tables.locations.shoreline,
+            tables.locations.tarkovstreets,
+            tables.locations.woods
+        ];
 
-		let tables = db.getTables();
-		const itemDB = tables.templates.items;
-		const handbookPrices = tables.templates.handbook.Items;
-		const fleaPrices = tables.templates.prices;
-		let keys: string[] = [];
+        const totalResult = KeysInLootModificationResult.empty();
+        for (const sptLocation of sptLocations)
+        {
+            try 
+            {
+                const keysInLootLocation = await keysInLootLocationFactory.createKeysInLootLocation(sptLocation);
+                const locationResult = keysInLootLocation.modifyContainers();
+                totalResult.addResult(locationResult);
+            }
+            catch (err) 
+            {
+                console.error(`[${this.modShortName}] Error while processing location ${sptLocation.base._Id}: ${err}`);
+                continue;
+            }
+        }
 
-		for (let item in itemDB) {
-			const itemId = itemDB[item]._id;
-			if (itemDB[item]._type == "Item") {
-				if ((itemHelper.isOfBaseclass(itemId, BaseClasses.KEY_MECHANICAL) && config.keyWeight !== 0)
-					|| (itemHelper.isOfBaseclass(itemId, BaseClasses.KEYCARD) && config.keycardWeight !== 0)) {
-						keys.push(itemId);
-						const itemToModify = handbookPrices.find(item => item.Id === itemId);
-						if (itemToModify) {
-							itemToModify.Price = Math.round(itemToModify.Price * config.keyTraderPricesMultiplier);
-						}
-						if (fleaPrices[itemId]) {
-							fleaPrices[itemId] = Math.round(fleaPrices[itemId] * config.keyFleaPricesMultiplier);
-						}	
-				}
-			}
-		}
+        
+        try 
+        {
+            // Get distinct list of item templates from totalResult
+            const allItems = [...totalResult.adjustedWeights, ...totalResult.addedWeights];
+            const distinctItems = allItems.filter((item, index, self) =>
+                index === self.findIndex(t => t._id === item._id)
+            );
+            // Adjust prices for modified or added keys or keycards
+            const itemPriceService = new ItemPriceService(tables);
+            distinctItems.forEach(item => itemPriceService.adjustFleaMarketPrice(item, config.keyFleaPricesMultiplier));
+            distinctItems.forEach(item => itemPriceService.adjustTraderPrice(item, config.keyTraderPricesMultiplier));
+        }
+        catch (err) 
+        {
+            console.error(`[${this.modShortName}] Error while processing prices: ${err}`);
+        }
 
-		let adjustedWeights = 0;
-		let addedKeys = 0;
+        logger.info(`[${this.modShortName}] ${totalResult.adjustedWeights.length} keys weights were adjusted`);
+        logger.info(`[${this.modShortName}] different keys were added ${totalResult.addedWeights.length} times to jacket/duffle/dead scav loot`);
 
-		const maps = ["bigmap", "factory4_day", "factory4_night", "interchange", "laboratory", "lighthouse", "rezervbase", "sandbox", "sandbox_high", "shoreline", "tarkovstreets", "woods"];
-
-		for (const map of maps) {
-			for (const key of keys) {
-				let configWeight = 0;
-				if (itemHelper.isOfBaseclass(key, BaseClasses.KEY_MECHANICAL)) {
-					configWeight = config.keyWeight;
-				} else {
-					configWeight = config.keycardWeight;
-				}
-				try {
-					if (tables.locations[map] && tables.locations[map].staticLoot && tables.locations[map].staticLoot["578f8778245977358849a9b5"]) {
-						const jacket = tables.locations[map].staticLoot["578f8778245977358849a9b5"];
-						const foundKeyJacket = jacket.itemDistribution.find(item => item.tpl === key);
-						if (foundKeyJacket) {
-							if (foundKeyJacket.relativeProbability < configWeight) {
-								foundKeyJacket.relativeProbability = configWeight;
-								adjustedWeights++;
-							}
-						} else {
-							jacket.itemDistribution.push({
-								tpl: key,
-								relativeProbability: configWeight
-							});
-							addedKeys++;
-						}
-						if (config.overrideLootDistribution) {
-							jacket.itemcountDistribution = config.overRideLootDistributionJackets;
-						}
-					}
-				} catch (error) {
-					console.error(`Error processing jacket on map ${map}`, error);
-				}
-				
-				try {
-					if (tables.locations[map] && tables.locations[map].staticLoot && tables.locations[map].staticLoot["578f87a3245977356274f2cb"]) {
-						const duffleBag = tables.locations[map].staticLoot["578f87a3245977356274f2cb"];
-						const foundKeyDuffle = duffleBag.itemDistribution.find(item => item.tpl === key);
-						if (foundKeyDuffle) {
-							if (foundKeyDuffle.relativeProbability < configWeight) {
-								foundKeyDuffle.relativeProbability = configWeight;
-								adjustedWeights++;
-							}
-						} else {
-							duffleBag.itemDistribution.push({
-								tpl: key,
-								relativeProbability: configWeight
-							});
-							addedKeys++;
-						}
-						if (config.overrideLootDistribution) {
-							duffleBag.itemcountDistribution = config.overRideLootDistributionDuffleBags;
-						}
-					}
-				} catch (error) {
-					console.error(`Error processing dufflebag on map ${map}`, error);
-				}
-
-				try {
-					if (tables.locations[map] && tables.locations[map].staticLoot && tables.locations[map].staticLoot["5909e4b686f7747f5b744fa4"]) {
-						const deadScav = tables.locations[map].staticLoot["5909e4b686f7747f5b744fa4"];
-						const foundDeadScav = deadScav.itemDistribution.find(item => item.tpl === key);
-						if (foundDeadScav) {
-							if (foundDeadScav.relativeProbability < configWeight) {
-								foundDeadScav.relativeProbability = configWeight;
-								adjustedWeights++;
-							}
-						} else {
-							deadScav.itemDistribution.push({
-								tpl: key,
-								relativeProbability: configWeight
-							});
-							addedKeys++;
-						}
-						if (config.overrideLootDistribution) {
-							deadScav.itemcountDistribution = config.overRideLootDistributionDeadScavs;
-						}
-					}
-				} catch (error) {
-					console.error(`Error processing deadScav on map ${map}`, error);
-				}
-
-				
-			}
-		}	
-
-		logger.info(`[${this.modShortName}] ${adjustedWeights} keys weights were adjusted`);
-		logger.info(`[${this.modShortName}] different keys were added ${addedKeys} times to jacket/duffle/dead scav loot`);
-
-		itemDB["578f8778245977358849a9b5"]._props.Grids[0]._props.cellsH = config.cellsH;
-		itemDB["578f8778245977358849a9b5"]._props.Grids[0]._props.cellsV = config.cellsV;
+        // Adjust jacket cell size
+        const itemDB = tables.templates.items;
+        itemDB["578f8778245977358849a9b5"]._props.Grids[0]._props.cellsH = config.cellsH;
+        itemDB["578f8778245977358849a9b5"]._props.Grids[0]._props.cellsV = config.cellsV;
 
 
-		logger.success(`[${this.modShortName}] ${this.mod} finished loading`);
-	}
+        logger.success(`[${this.modShortName}] ${this.mod} finished loading`);
+    }
 }
 
 module.exports = { mod: new KeysInLoot() }
