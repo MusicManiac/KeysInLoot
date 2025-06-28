@@ -116,7 +116,7 @@ async function main() {
         // Create a zip archive of the project files.
         logger.log("info", "Beginning folder compression...");
         const zipFilePath = path.join(path.dirname(projectDir), `${projectName}.zip`);
-        await createZipFile(projectDir, zipFilePath, "user/mods/" + projectName);
+        await createZipFile(projectDir, zipFilePath, "user/mods/zz" + packageJson.name);
         logger.log("success", "Archive successfully created.");
         logger.log("info", zipFilePath);
 
@@ -222,11 +222,10 @@ async function loadPackageJson(currentDir) {
  */
 function createProjectName(packageJson) {
     // Remove any non-alphanumeric characters from the author and name.
-    const author = packageJson.author.replace(/\W/g, "");
     const name = packageJson.name.replace(/\W/g, "");
 
     // Ensure the name is lowercase, as per the package.json specification.
-    return `${author}-${name}`.toLowerCase();
+    return `${name}`.toLowerCase();
 }
 
 /**
